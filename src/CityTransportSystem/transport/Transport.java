@@ -26,7 +26,6 @@ public abstract class Transport {
     protected boolean isDoorOpen;
     protected boolean isEngineOn;
 
-    protected boolean isBroken;
     protected Driver assignedDriver;
 
     protected List<Passenger> passengers;
@@ -36,7 +35,6 @@ public abstract class Transport {
             String model,
             String brand,
             int maxSpeed,
-            int capacity,
             int productionYear,
             Route assignedRoute,
             Driver assignedDriver
@@ -46,7 +44,6 @@ public abstract class Transport {
         this.brand = brand;
 
         this.maxSpeed = maxSpeed;
-        this.capacity = capacity;
         this.productionYear = productionYear;
 
         this.assignedRoute = assignedRoute;
@@ -153,14 +150,11 @@ public abstract class Transport {
     public boolean isAirConditioningOn(){
         return isAirConditioningOn;
     }
-    public boolean isDoorOpen(){
+    public boolean getIsDoorOpen(){
         return isDoorOpen;
     }
-    public boolean isEngineOn(){
+    public boolean getIsEngineOn(){
         return isEngineOn;
-    }
-    public boolean isBroken(){
-        return isBroken;
     }
     public Driver getAssignedDriver(){
         return assignedDriver;

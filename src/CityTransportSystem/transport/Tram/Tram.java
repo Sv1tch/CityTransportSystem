@@ -1,6 +1,8 @@
 package CityTransportSystem.transport.Tram;
 
 import CityTransportSystem.employee.Driver;
+import CityTransportSystem.transport.Exceptions.TransportLogicException;
+import CityTransportSystem.transport.enums.TransportStatus;
 import CityTransportSystem.transport.route.Route;
 import CityTransportSystem.transport.Transport;
 import CityTransportSystem.transport.enums.PantographStatus;
@@ -8,14 +10,13 @@ import CityTransportSystem.transport.enums.PantographStatus;
 public class Tram extends Transport {
     private double electricityConsumption;
     private PantographStatus pantographStatus;
-    private int voltageLevel;
+    private final int voltageLevel;
 
-    private double railGauge;
+    private final double railGauge;
     private int currentTrackNumber;
 
     private int sectionCount;
 
-    private boolean isConnectedToGrid;
 
     public Tram(
             String id,
@@ -33,35 +34,111 @@ public class Tram extends Transport {
             int currentTrackNumber,
             int sectionCount
     ){
-        super(id, model, brand, maxSpeed, capacity, productionYear, assignedRoute, assignedDriver);
+        super(id, model, brand, maxSpeed, productionYear, assignedRoute, assignedDriver);
+        this.capacity = capacity;
         this.electricityConsumption = electricityConsumption;
         this.pantographStatus = pantographStatus;
         this.railGauge = railGauge;
+        this.voltageLevel = voltageLevel;
         this.currentTrackNumber = currentTrackNumber;
         this.sectionCount = sectionCount;
-
-        this.isConnectedToGrid = false;
     }
 
+    // Move logic
+
+    @Override
+    public void move(){
+        if(transportStatus == TransportStatus.BROKEN){
+            throw new TransportLogicException("Cannot move broken tram.");
+        }
+
+        if(!isEngineOn){
+            throw new TransportLogicException("Engine is off.");
+        }
+
+        if(isDoorOpen){
+            throw new TransportLogicException("Cannot move while doors are opened.");
+        }
+
+        if(!pantographStatus.equals(PantographStatus.IN_USE)){
+            throw new TransportLogicException("Tram is not connected to power grid.");
+        }
+
+        if(assignedRoute == null){
+            throw new TransportLogicException("Tram has no assigned route.");
+        }
+
+        if(currentStopIndex >= assignedRoute.getStopsCount() - 1){
+            throw new TransportLogicException("Tram already reached final stop.");
+        }
+
+        if(assignedDriver == null){
+            throw new TransportLogicException("No driver assigned.");
+        }
+
+        currentStopIndex++;
+
+        transportStatus = TransportStatus.ON_ROUTE;
+    }
+
+    @Override
+    public void stop(){
+        transportStatus = TransportStatus.ON_STOP;
+    }
+
+    //Grid logic
+
     public void connectToPowerGrid(){
-        if(!isConnectedToGrid){
-            isConnectedToGrid = true;
+        if(!(pantographStatus.equals(PantographStatus.IN_USE))){
+            pantographStatus = PantographStatus.IN_USE;
         }
     }
 
     public void disconnectPowerGrid(){
-        if(isConnectedToGrid){
-            isConnectedToGrid = false;
+        if(pantographStatus.equals(PantographStatus.IN_USE)){
+            pantographStatus = PantographStatus.DISCONNECTED;
         }
     }
 
-    public void emergencyBrake(){
-        isConnectedToGrid = false;
+    //Engine logic
+
+    public void startEngine(){
+        if(transportStatus == TransportStatus.BROKEN){
+            throw new TransportLogicException("Cannot start broken tram.");
+        }
+
+        if(!(pantographStatus.equals(PantographStatus.IN_USE))){
+            throw new TransportLogicException("Tram is not connected to power grid.");
+        }
+
+        isEngineOn = true;
+    }
+
+    public void stopEngine(){
         isEngineOn = false;
     }
 
-    public void switchTrack(int numberOfTrack){
-        currentTrackNumber = numberOfTrack;
+    //Track logic
+    public void switchTrack(int newNumberOfTrack){
+        if(newNumberOfTrack <= 0){
+            throw new IllegalArgumentException("Track number cannot be <= 0.");
+        }
+        currentTrackNumber = newNumberOfTrack;
+    }
+
+    //Emergency logic
+    public void emergencyBrake(){
+        isEngineOn = false;
+
+        transportStatus = TransportStatus.ON_STOP;
+    }
+
+    public void breakdown(){
+        transportStatus = TransportStatus.BROKEN;
+    }
+
+    public void repair(){
+        transportStatus = TransportStatus.IN_SERVICE;
     }
 
     //Getters

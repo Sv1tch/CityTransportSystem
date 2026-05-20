@@ -29,7 +29,8 @@ public class Bus extends Transport {
                double fuelConsumptionPerKm,
                Route assignedRoute,
                Driver assignedDriver){
-        super(id, model, brand, maxSpeed, capacity, productionYear, assignedRoute, assignedDriver);
+        super(id, model, brand, maxSpeed, productionYear, assignedRoute, assignedDriver);
+        this.capacity = capacity;
         this.fuelType = fuelType;
         this.fuelCapacity = fuelCapacity;
         this.currentFuelLevel = currentFuelLevel;
@@ -96,19 +97,17 @@ public class Bus extends Transport {
     }
 
     public void startEngine(){
-        if(!isBroken && currentFuelLevel > 0){
+        if(!(transportStatus.equals(TransportStatus.BROKEN)) && currentFuelLevel > 0){
             isEngineOn = true;
         }
     }
 
     public void breakdown(){
-        isBroken = true;
         transportStatus = TransportStatus.BROKEN;
         isEngineOn = false;
     }
 
     public void repair(){
-        isBroken = false;
         transportStatus = TransportStatus.IN_SERVICE;
     }
 
